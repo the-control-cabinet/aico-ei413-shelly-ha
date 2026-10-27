@@ -1,0 +1,102 @@
+# Deployed alert automations (built in the HA editor; this is their YAML view).
+# notify.your_phone = your phone's notify ENTITY, used with notify.send_message.
+# The Aico alarms detect, interlink and sound independently. These only report to the phone.
+
+- id: aico_fire_co_fault_alert
+  alias: Aico - Fire / CO / Fault alert
+  description: Phone + HA notification when the Ei413 reports Fire, CO or Fault, and when it clears
+  mode: queued
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.hall_aicom_smoke_alarm_input_0   # Fire
+        - binary_sensor.hall_aicom_smoke_alarm_input_1   # CO
+        - binary_sensor.hall_aicom_smoke_alarm_input_2   # Fault
+      to: "on"
+      not_from:
+        - unavailable
+        - unknown
+      id: active
+    - trigger: state
+      entity_id:
+        - binary_sensor.hall_aicom_smoke_alarm_input_0   # Fire
+        - binary_sensor.hall_aicom_smoke_alarm_input_1   # CO
+        - binary_sensor.hall_aicom_smoke_alarm_input_2   # Fault
+      from: "on"
+      to: "off"
+      id: cleared
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: active
+          sequence:
+            - action: notify.send_message
+              target:
+                entity_id: notify.your_phone
+              data:
+                title: "ALARM: {{ trigger.to_state.name }}"
+                message: >
+                  {{ trigger.to_state.name }} became active at {{ now().strftime('%H:%M:%S') }}.
+                  (A weekly test-button press also triggers this.)
+            - action: persistent_notification.create
+              data:
+                title: "ALARM: {{ trigger.to_state.name }}"
+                message: "Active since {{ now().strftime('%d %b %H:%M:%S') }}."
+        - conditions:
+            - condition: trigger
+              id: cleared
+          sequence:
+            - action: notify.send_message
+              target:
+                entity_id: notify.your_phone
+              data:
+                title: "Cleared: {{ trigger.to_state.name }}"
+                message: "{{ trigger.to_state.name }} back to normal at {{ now().strftime('%H:%M:%S') }}."
+
+- id: aico_interface_offline
+  alias: Aico - interface offline
+  description: Alert if either Shelly drops off for 5 min (adapter, Wi-Fi or device failure), and when it returns
+  mode: queued
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.hall_aicom_smoke_alarm_input_0
+        - switch.control_room_shelly_plus_1_aicom_smoke_alarm_trigger
+      to: unavailable
+      for: "00:05:00"
+      id: offline
+    - trigger: state
+      entity_id:
+        - binary_sensor.hall_aicom_smoke_alarm_input_0
+        - switch.control_room_shelly_plus_1_aicom_smoke_alarm_trigger
+      from: unavailable
+      id: online
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: offline
+          sequence:
+            - action: notify.send_message
+              target:
+                entity_id: notify.your_phone
+              data:
+                title: Aico interface OFFLINE
+                message: >
+                  {{ trigger.to_state.name }} has been unavailable for 5 minutes.
+                  Fire/CO status is NOT reaching HA. The alarms themselves still work.
+            - action: persistent_notification.create
+              data:
+                title: Aico interface OFFLINE
+                message: "{{ trigger.to_state.name }} unavailable since {{ now().strftime('%d %b %H:%M') }}."
+        - conditions:
+            - condition: trigger
+              id: online
+          sequence:
+            - action: notify.send_message
+              target:
+                entity_id: notify.your_phone
+              data:
+                title: Aico interface back online
+                message: "{{ trigger.to_state.name }} reconnected at {{ now().strftime('%H:%M:%S') }}."

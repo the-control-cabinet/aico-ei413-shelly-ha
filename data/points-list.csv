@@ -1,0 +1,5 @@
+point,source,contact,shelly_device,shelly_input,ha_device,ha_entity_name,ha_entity_id,input_type,device_class,normal_state,active_state
+Fire,Ei413 Fire relay,C-NO,Shelly Plus i4 DC,0,Aico Smoke Alarm - Status,Fire Alarm,binary_sensor.hall_aicom_smoke_alarm_input_0,switch,smoke,Clear,Detected
+CO,Ei413 CO relay,C-NO,Shelly Plus i4 DC,1,Aico Smoke Alarm - Status,CO Alarm,binary_sensor.hall_aicom_smoke_alarm_input_1,switch,carbon_monoxide,Clear,Detected
+Fault,Ei413 Fault relay,C-NO,Shelly Plus i4 DC,2,Aico Smoke Alarm - Status,Smoke Alarm Fault,binary_sensor.hall_aicom_smoke_alarm_input_2,switch,problem,OK,Problem
+Sound all alarms,HA command,Plus 1 dry contact,Shelly Plus 1,relay 0,Aico Smoke Alarm - Trigger,Aico Smoke Alarm - Trigger,switch.control_room_shelly_plus_1_aicom_smoke_alarm_trigger,n/a,switch,Off,On
